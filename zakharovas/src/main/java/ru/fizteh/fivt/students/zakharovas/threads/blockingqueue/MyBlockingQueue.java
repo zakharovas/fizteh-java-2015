@@ -23,7 +23,7 @@ public class MyBlockingQueue<T> {
     private Condition notEmptyQueueCondition = lockForOneElement.newCondition();
     private int maxSize;
 
-    public synchronized List<T> take(int n) throws IllegalArgumentException {
+    public List<T> take(int n) throws IllegalArgumentException {
         if (n < 0) {
             throw new IllegalArgumentException("Argument was negative number");
         }
@@ -51,7 +51,7 @@ public class MyBlockingQueue<T> {
         }
     }
 
-    public synchronized <E extends T> void offer(List<E> list) {
+    public <E extends T> void offer(List<E> list) {
         try {
             writingLock.lock();
             for (E element : list) {
