@@ -5,23 +5,27 @@ package ru.fizteh.fivt.students.zakharovas.threads.counter;
  */
 public class CountingThread extends Thread {
 
-    public static int numberOfThreads;
-    private final static Object mutex = new Object();
+    private static int numberOfThreads;
+    private static final  Object MONITOR = new Object();
     private static volatile int currentNumber = 0;
     private int thisThreadNumber;
 
+    public static void setNumberOfThreads(int numberOfThreads) {
+        CountingThread.numberOfThreads = numberOfThreads;
+    }
+
     @Override
     public void run() {
-        synchronized (mutex) {
+        synchronized (MONITOR) {
             while (true) {
                 if (currentNumber == thisThreadNumber) {
                     System.out.println("Thread " + thisThreadNumber);
                     currentNumber = (currentNumber + 1) % numberOfThreads;
-                    mutex.notifyAll();
-                 }
+                    MONITOR.notifyAll();
+                }
                 try {
-                    mutex.wait();
-                } catch (InterruptedException e) {}
+                    MONITOR.wait();
+                } catch (InterruptedException e) { }
             }
         }
     }

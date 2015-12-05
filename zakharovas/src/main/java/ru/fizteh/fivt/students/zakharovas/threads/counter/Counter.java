@@ -13,7 +13,7 @@ public class Counter {
                 throw new IOException();
             }
             numberOfThreads = Integer.valueOf(args[0]);
-            if (numberOfThreads <= 0 ) {
+            if (numberOfThreads <= 0) {
                 throw new IOException();
             }
         } catch (NumberFormatException | IOException e) {
@@ -21,15 +21,12 @@ public class Counter {
             System.exit(1);
         }
         startThreads(numberOfThreads);
-
     }
 
     private static void startThreads(int numberOfThreads) {
-        CountingThread.numberOfThreads  = numberOfThreads;
+        CountingThread.setNumberOfThreads(numberOfThreads);
         for (int i = 0; i < numberOfThreads; ++i) {
-            new CountingThread(i).start();;
+            new CountingThread(i).start();
         }
-
-
     }
 }
