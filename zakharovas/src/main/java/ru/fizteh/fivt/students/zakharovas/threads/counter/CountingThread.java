@@ -6,7 +6,6 @@ package ru.fizteh.fivt.students.zakharovas.threads.counter;
 public class CountingThread extends Thread {
 
     private static int numberOfThreads;
-    private static final  Object MONITOR = new Object();
     private static volatile int currentNumber = 0;
     private int thisThreadNumber;
 
@@ -16,15 +15,15 @@ public class CountingThread extends Thread {
 
     @Override
     public void run() {
-        synchronized (MONITOR) {
+        synchronized (this.getClass()) {
             while (true) {
                 if (currentNumber == thisThreadNumber) {
                     System.out.println("Thread " + thisThreadNumber);
                     currentNumber = (currentNumber + 1) % numberOfThreads;
-                    MONITOR.notifyAll();
+                    this.getClass().notifyAll();
                 }
                 try {
-                    MONITOR.wait();
+                    this.getClass().wait();
                 } catch (InterruptedException e) { }
             }
         }
