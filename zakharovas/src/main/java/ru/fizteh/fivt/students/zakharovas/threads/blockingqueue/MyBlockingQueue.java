@@ -37,6 +37,7 @@ public class MyBlockingQueue<T> {
                         try {
                             notEmptyQueueCondition.await();
                         } catch (InterruptedException e) {
+                            return null;
                         }
                     }
                     answer.add(realQueue.poll());
@@ -61,6 +62,8 @@ public class MyBlockingQueue<T> {
                         try {
                             notFullQueueCondition.await();
                         } catch (InterruptedException e) {
+                            return;
+
                         }
                     }
                     realQueue.add(element);
@@ -74,8 +77,25 @@ public class MyBlockingQueue<T> {
         }
     }
 
+    //not ready
+    public List<T> take(int n, long timeout) throws IllegalArgumentException {
+        if (n < 0 || timeout < 0) {
+            throw new IllegalArgumentException("One of the arguments was negative number");
+        }
+
+        return null;
+    }
+
+    public <E extends T> boolean offer(List<E> list, long timeout) {
+        if (timeout < 0) {
+            throw new IllegalArgumentException("Timeout was negative number");
+        }
+        return false;
+    }
+
     public MyBlockingQueue(int maxSize) {
         this.maxSize = maxSize;
     }
+
 
 }
