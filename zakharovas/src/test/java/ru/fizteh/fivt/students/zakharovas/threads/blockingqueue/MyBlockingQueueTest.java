@@ -24,12 +24,12 @@ public class MyBlockingQueueTest {
     @Test
     public void testBlockingOnEmpty() throws Exception {
         MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(5);
-         Thread testingThread = new Thread(new Runnable() {
-             @Override
-             public void run() {
-                 queue.take(5);
-             }
-         });
+        Thread testingThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                queue.take(5);
+            }
+        });
         testingThread.start();
         Thread.sleep(50);
         assertThat(testingThread.isAlive(), is(true));
@@ -39,7 +39,7 @@ public class MyBlockingQueueTest {
     @Test
     public void testBlockingOnOverFlowing() throws Exception {
         MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(5);
-        List<Integer> tooLargeList = Arrays.asList(1,2,3,4,5,6);
+        List<Integer> tooLargeList = Arrays.asList(1, 2, 3, 4, 5, 6);
         Thread testingThread = new Thread(new Runnable() {
             @Override
             public void run() {
