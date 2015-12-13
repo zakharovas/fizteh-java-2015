@@ -1,7 +1,5 @@
 package ru.fizteh.fivt.students.zakharovas.threads.counter;
 
-import java.io.IOException;
-
 /**
  * Created by alexander on 05.12.2015.
  */
@@ -10,13 +8,13 @@ public class Counter {
         int numberOfThreads = 0;
         try {
             if (args.length == 0) {
-                throw new IOException();
+                throw new IllegalArgumentException();
             }
             numberOfThreads = Integer.valueOf(args[0]);
             if (numberOfThreads <= 0) {
-                throw new IOException();
+                throw new IllegalArgumentException();
             }
-        } catch (NumberFormatException | IOException e) {
+        } catch (IllegalArgumentException e) {
             System.err.println("There should be positive number as command line argument");
             System.exit(1);
         }
