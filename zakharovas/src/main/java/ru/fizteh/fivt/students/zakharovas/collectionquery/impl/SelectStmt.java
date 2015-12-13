@@ -125,9 +125,8 @@ public class SelectStmt<T, R> implements Query<R> {
                 for (T element : source) {
                     GroupByResult<T> resultForElement = new GroupByResult<>(element, groupByExpressions);
                     mapOfElementWithResult.put(element, resultForElement);
-                    if (!mapOfResultWithNumber.containsValue(resultForElement)) {
-                        Integer size = mapOfResultWithNumber.size();
-                        mapOfResultWithNumber.put(resultForElement, size);
+                    if (!mapOfResultWithNumber.containsKey(resultForElement)) {
+                        mapOfResultWithNumber.put(resultForElement, mapOfResultWithNumber.size());
                     }
                 }
                 for (int i = 0; i < mapOfResultWithNumber.size(); ++i) {
@@ -159,7 +158,7 @@ public class SelectStmt<T, R> implements Query<R> {
                 finalResult.addAll(element);
             }
             if (limit >= 0) {
-                finalResult = finalResult.subList(0, Math.min(result.size(), limit));
+                finalResult = finalResult.subList(0, Math.min(finalResult.size(), limit));
             }
             return finalResult;
         }
