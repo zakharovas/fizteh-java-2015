@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -31,10 +30,13 @@ public class MyBlockingQueueTest {
     public void testBlockingOnEmpty() throws Exception {
         MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(5);
         Thread testingThread = new Thread(() -> {
-            queue.take(5);
+            try {
+                queue.take(5);
+            } catch (InterruptedException e) {
+            }
         });
         testingThread.start();
-        Thread.sleep(50);
+        testingThread.join(50);
         assertThat(testingThread.isAlive(), is(true));
         testingThread.interrupt();
     }
@@ -44,21 +46,24 @@ public class MyBlockingQueueTest {
         MyBlockingQueue<Integer> queue = new MyBlockingQueue<>(5);
         List<Integer> tooLargeList = Arrays.asList(1, 2, 3, 4, 5, 6);
         Thread testingThread = new Thread(() -> {
-            queue.offer(tooLargeList);
+            try {
+                queue.offer(tooLargeList);
+            } catch (InterruptedException e) {
+            }
         });
         testingThread.start();
-        Thread.sleep(50);
+        testingThread.join(50);
         assertThat(testingThread.isAlive(), is(true));
         testingThread.interrupt();
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBadSize() {
+    public void testBadSize() throws InterruptedException {
         queue.take(-10);
     }
 
-    @Test(timeout = 100)
-    public void testSingleThreadQueue() {
+    @Test(timeout = 1000)
+    public void testSingleThreadQueue() throws InterruptedException {
         List<Integer> firstList = Arrays.asList(1, 2, 3);
         List<Integer> secondList = Arrays.asList(6, 5);
         queue.offer(firstList);
@@ -95,13 +100,11 @@ public class MyBlockingQueueTest {
     public void testMultiThreadOffering() throws Exception {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         List<Integer> answerList;
-        queue.offer(Arrays.asList(1, 2, 3, 4, 5));
         executor.submit(() -> queue.offer(Arrays.asList(1, 2, 3)));
         Thread.sleep(100);
         executor.submit(() -> queue.offer(Arrays.asList(6, 5)));
-        answerList = queue.take(10);
-        assertThat(answerList.size(), is(10));
-        List<Integer> rightAnswer = Arrays.asList(1, 2, 3, 4, 5, 1, 2, 3, 6, 5);
-        assertThat(answerList, is(rightAnswer));
+        answerList = queue.take(5);
+        assertThat(answerList.size(), is(5));
+        assertThat(answerList, contains(1, 2, 3, 6, 5));
     }
 }
