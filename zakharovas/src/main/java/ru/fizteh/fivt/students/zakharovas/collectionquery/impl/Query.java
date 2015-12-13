@@ -7,7 +7,7 @@ import java.util.stream.Stream;
  */
 public interface Query<R> {
 
-    Iterable<R> execute();
+    Iterable<R> execute() throws ReflectiveOperationException;
 
-    Stream<R> stream();
+    Stream<R> stream() throws ReflectiveOperationException;
 }

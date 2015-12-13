@@ -1,7 +1,9 @@
 package ru.fizteh.fivt.students.zakharovas.collectionquery.impl;
 
+import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -9,18 +11,19 @@ import java.util.stream.StreamSupport;
  * Created by kormushin on 06.10.15.
  */
 public class FromStmt<T> {
-    private Stream<T> source;
+    private List<?> previousResults;
+    private List<T> source;
 
     public static <T> FromStmt<T> from(Iterable<T> iterable) {
         return new FromStmt<T>(iterable);
     }
 
     public static <T> FromStmt<T> from(Stream<T> stream) {
-       return new FromStmt<T>(stream);
+        return new FromStmt<T>(stream);
     }
 
-    public static <T> FromStmt<T> from(Query query) {
-        throw new UnsupportedOperationException();
+    public static <T> FromStmt<T> from(Query query) throws ReflectiveOperationException {
+        return new FromStmt<T>(query.execute());
     }
 
     @SafeVarargs
@@ -94,13 +97,12 @@ public class FromStmt<T> {
     }
 
     private FromStmt(Iterable<T> iterable) {
-        source = StreamSupport.stream(iterable.spliterator(), false);
+        source = StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
     }
 
     private FromStmt(Stream<T> stream) {
-        source = stream;
+        source = stream.collect(Collectors.toList());
     }
-
 
 
 }

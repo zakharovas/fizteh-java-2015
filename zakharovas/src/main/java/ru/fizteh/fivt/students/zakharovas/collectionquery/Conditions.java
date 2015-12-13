@@ -19,7 +19,7 @@ public class Conditions<T> {
      * @return
      */
     public static <T> Predicate<T> rlike(Function<T, String> expression, String regexp) {
-        throw new UnsupportedOperationException();
+        return (object) -> (expression.apply(object).matches(regexp));
     }
 
     /**
@@ -31,7 +31,10 @@ public class Conditions<T> {
      * @return
      */
     public static <T> Predicate<T> like(Function<T, String> expression, String pattern) {
-        throw new UnsupportedOperationException();
+        if (pattern == null) {
+            return (object) -> false;
+        }
+        return (object) -> (pattern.equals(expression.apply(object)));
     }
 
 }
