@@ -14,27 +14,28 @@ import java.util.stream.StreamSupport;
  * Created by kormushin on 06.10.15.
  */
 public class SelectStmt<T, R> implements Query<R> {
-    private List<T> alsoSource;
+    private List<T> source;
     private boolean isDistinct;
     private boolean hasConvertingFunction;
     private Function<T, R> converter;
-    private Function<T, ?> functions[];
+    private Function<T, ?>[] functions;
     private Class<R> rClass;
     private List<?> previousResults;
 
     @SafeVarargs
-    public SelectStmt(List<?> previousResults, List<T> source, Class<R> rClass, boolean isDistinct, Function<T, ?>... functions) {
+    public SelectStmt(List<?> previousResults, List<T> source, Class<R> rClass, boolean isDistinct,
+                      Function<T, ?>... functions) {
         this.functions = functions;
         hasConvertingFunction = false;
         this.converter = null;
         this.isDistinct = isDistinct;
-        alsoSource = source;
+        this.source = source;
         this.rClass = rClass;
         this.previousResults = previousResults;
     }
 
     public SelectStmt(List<?> previousResults, List<T> source, boolean isDistinct, Function<T, R> s) {
-        alsoSource = source;
+        this.source = source;
         hasConvertingFunction = true;
         this.isDistinct = isDistinct;
         this.converter = s;
@@ -44,12 +45,12 @@ public class SelectStmt<T, R> implements Query<R> {
 
 
     public WhereStmt<T, R> where(Predicate<T> predicate) {
-        return new WhereStmt<>(alsoSource, predicate, isDistinct, hasConvertingFunction, converter, functions, rClass);
+        return new WhereStmt<>(source, predicate, isDistinct, hasConvertingFunction, converter, functions, rClass);
     }
 
     @Override
     public Iterable<R> execute() throws ReflectiveOperationException {
-        return new WhereStmt<T, R>(alsoSource, element -> true, isDistinct,
+        return new WhereStmt<T, R>(source, element -> true, isDistinct,
                 hasConvertingFunction, converter, functions, rClass).execute();
 
     }
@@ -64,13 +65,13 @@ public class SelectStmt<T, R> implements Query<R> {
 
         private List<T> source;
         private Predicate<T> wherePredicate;
-        private Function<T, ?> groupByExpressions[];
-        private Comparator<R> orderByComparators[];
+        private Function<T, ?>[] groupByExpressions;
+        private Comparator<R>[] orderByComparators;
         private Predicate<R> havingPredicate;
         private boolean isDistinct;
         private boolean hasConvertingFunction;
         private Function<T, R> converter;
-        private Function<T, ?> functions[];
+        private Function<T, ?>[] functions;
         private Class<R> rClass;
         private int limit = -1;
 
@@ -164,7 +165,7 @@ public class SelectStmt<T, R> implements Query<R> {
                 finalResult = finalResult.subList(0, Math.min(finalResult.size(), limit));
             }
             if (previousResults != null) {
-                if (previousResults.size() > 0 ) {
+                if (previousResults.size() > 0) {
                     if (previousResults.get(0).getClass() != rClass) {
                         throw new IllegalArgumentException("Union has differentArguments");
                     } else {
@@ -224,7 +225,7 @@ public class SelectStmt<T, R> implements Query<R> {
                     }
                 }
                 for (List<Object> objects : temporaryResults) {
-                    Class<?> classes[] = new Class[functions.length];
+                    Class<?>[] classes = new Class[functions.length];
                     for (int i = 0; i < functions.length; ++i) {
                         classes[i] = temporaryResults.get(0).get(i).getClass();
                     }

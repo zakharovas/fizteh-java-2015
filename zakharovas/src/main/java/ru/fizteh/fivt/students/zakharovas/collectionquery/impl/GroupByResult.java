@@ -6,9 +6,9 @@ import java.util.function.Function;
  * Created by alexander on 13.12.15.
  */
 public class GroupByResult<T> {
-    Object results[];
+    private Object[] results;
 
-    public GroupByResult(T element, Function<T, ?> functions[]) {
+    public GroupByResult(T element, Function<T, ?>[] functions) {
         results = new Object[functions.length];
         for (int i = 0; i < functions.length; ++i) {
             results[i] = functions[i].apply(element);
@@ -17,14 +17,14 @@ public class GroupByResult<T> {
 
     @Override
     public boolean equals(Object obj) {
-        if (! (obj instanceof GroupByResult)) {
+        if (!(obj instanceof GroupByResult)) {
             return false;
         }
         GroupByResult anotherResult = (GroupByResult) obj;
         if (results.length != anotherResult.results.length) {
             return false;
         }
-        for (int i = 0; i  < results.length; ++i) {
+        for (int i = 0; i < results.length; ++i) {
             if (!results[i].equals(anotherResult.results[i])) {
                 return false;
             }
@@ -36,8 +36,8 @@ public class GroupByResult<T> {
     public int hashCode() {
         int result = 0;
         System.out.println(results.length);
-        for (Object element: results) {
-            result+= element.hashCode();
+        for (Object element : results) {
+            result += element.hashCode();
         }
         return result;
     }

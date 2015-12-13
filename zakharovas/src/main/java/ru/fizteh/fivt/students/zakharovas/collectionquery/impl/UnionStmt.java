@@ -6,7 +6,7 @@ import java.util.List;
  * Created by kormushin on 09.10.15.
  */
 public class UnionStmt<R> {
-    List<R> previousResults;
+    private List<R> previousResults;
 
     public <T> FromStmt<T> from(Iterable<T> list) {
         FromStmt<T> newFrom =  new FromStmt<T>(list);

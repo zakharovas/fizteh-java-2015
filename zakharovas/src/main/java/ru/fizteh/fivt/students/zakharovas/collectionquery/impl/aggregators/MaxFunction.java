@@ -6,7 +6,7 @@ import java.util.function.Function;
 /**
  * Created by alexander on 13.12.15.
  */
-public class MaxFunction<T, E extends Comparable<E>> implements AggregationFunction<T, E>{
+public class MaxFunction<T, E extends Comparable<E>> implements AggregationFunction<T, E> {
 
     private Function<T, E> converter;
 
@@ -23,7 +23,7 @@ public class MaxFunction<T, E extends Comparable<E>> implements AggregationFunct
     @Override
     public E applyOnList(List<T> list) {
         E result = null;
-        for (T element: list) {
+        for (T element : list) {
             if (result == null) {
                 result = converter.apply(element);
             } else {

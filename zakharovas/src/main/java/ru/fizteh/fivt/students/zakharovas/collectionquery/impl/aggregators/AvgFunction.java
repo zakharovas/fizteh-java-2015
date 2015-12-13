@@ -17,7 +17,7 @@ public class AvgFunction<T> implements AggregationFunction<T, Double> {
     @Override
     public Double applyOnList(List<T> list) {
         Double result = 0d;
-        for (T element: list) {
+        for (T element : list) {
             result += converter.apply(element).doubleValue();
         }
         result /= list.size();
