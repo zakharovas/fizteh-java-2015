@@ -20,23 +20,26 @@ public class SelectStmt<T, R> implements Query<R> {
     private Function<T, R> converter;
     private Function<T, ?> functions[];
     private Class<R> rClass;
+    private List<?> previousResults;
 
     @SafeVarargs
-    public SelectStmt(List<T> source, Class<R> rClass, boolean isDistinct, Function<T, ?>... functions) {
+    public SelectStmt(List<?> previousResults, List<T> source, Class<R> rClass, boolean isDistinct, Function<T, ?>... functions) {
         this.functions = functions;
         hasConvertingFunction = false;
         this.converter = null;
         this.isDistinct = isDistinct;
         alsoSource = source;
         this.rClass = rClass;
+        this.previousResults = previousResults;
     }
 
-    public SelectStmt(List<T> source, boolean isDistinct, Function<T, R> s) {
+    public SelectStmt(List<?> previousResults, List<T> source, boolean isDistinct, Function<T, R> s) {
         alsoSource = source;
         hasConvertingFunction = true;
         this.isDistinct = isDistinct;
         this.converter = s;
         this.functions = null;
+        this.previousResults = previousResults;
     }
 
 
@@ -132,7 +135,7 @@ public class SelectStmt<T, R> implements Query<R> {
                 for (int i = 0; i < mapOfResultWithNumber.size(); ++i) {
                     groupedSource.add(new ArrayList<>());
                 }
-                for (T element: source) {
+                for (T element : source) {
                     groupedSource.get(mapOfResultWithNumber.get(mapOfElementWithResult.get(element))).add(element);
                 }
                 for (List<T> source : groupedSource) {
@@ -149,7 +152,7 @@ public class SelectStmt<T, R> implements Query<R> {
                 result = newResult;
             }
             if (orderByComparators != null) {
-                for (List<R> list: result) {
+                for (List<R> list : result) {
                     list.sort(compileComparator(orderByComparators));
                 }
             }
@@ -160,12 +163,24 @@ public class SelectStmt<T, R> implements Query<R> {
             if (limit >= 0) {
                 finalResult = finalResult.subList(0, Math.min(finalResult.size(), limit));
             }
+            if (previousResults != null) {
+                if (previousResults.size() > 0 ) {
+                    if (previousResults.get(0).getClass() != rClass) {
+                        throw new IllegalArgumentException("Union has differentArguments");
+                    } else {
+                        List<R> mergedResults = (List<R>) previousResults;
+                        mergedResults.addAll(finalResult);
+                        finalResult = mergedResults;
+                    }
+                }
+            }
+
             return finalResult;
         }
 
         private Comparator<R> compileComparator(Comparator<R>[] orderByComparators) {
             return (first, second) -> {
-                for (int i =0; i < orderByComparators.length - 1; ++i) {
+                for (int i = 0; i < orderByComparators.length - 1; ++i) {
                     if (orderByComparators[i].compare(first, second) != 0) {
                         return orderByComparators[i].compare(first, second);
                     }

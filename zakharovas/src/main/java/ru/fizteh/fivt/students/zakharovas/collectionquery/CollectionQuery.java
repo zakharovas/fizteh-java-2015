@@ -36,6 +36,9 @@ public class CollectionQuery {
                         .having(s -> s.getCount() > 0)
                         .orderBy(asc(Statistics::getGroup), desc(Statistics::getCount))
                         .limit(100)
+                        .union()
+                        .from(list(student("ivanov", LocalDate.parse("1985-08-06"), "494")))
+                        .selectDistinct(Statistics.class, s -> "all", count(s -> 1), avg(Student::age))
                         .execute();
         System.out.println(statistics);
 

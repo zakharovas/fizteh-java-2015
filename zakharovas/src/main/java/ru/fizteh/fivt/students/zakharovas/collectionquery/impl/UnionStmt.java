@@ -9,7 +9,9 @@ public class UnionStmt<R> {
     List<R> previousResults;
 
     public <T> FromStmt<T> from(Iterable<T> list) {
-        throw new UnsupportedOperationException();
+        FromStmt<T> newFrom =  new FromStmt<T>(list);
+        newFrom.setPreviousResults(previousResults);
+        return newFrom;
 
     }
 

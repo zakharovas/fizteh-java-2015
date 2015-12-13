@@ -28,7 +28,7 @@ public class FromStmt<T> {
 
     @SafeVarargs
     public final <R> SelectStmt<T, R> select(Class<R> clazz, Function<T, ?>... s) {
-        return new SelectStmt<T, R>(source, clazz, false, s);
+        return new SelectStmt<T, R>(previousResults, source, clazz, false, s);
     }
 
     /**
@@ -39,7 +39,7 @@ public class FromStmt<T> {
      * @return statement resulting in collection of R
      */
     public final <R> SelectStmt<T, R> select(Function<T, R> s) {
-        return new SelectStmt<T, R>(source, false, s);
+        return new SelectStmt<T, R>(previousResults, source, false, s);
     }
 
     /**
@@ -57,7 +57,7 @@ public class FromStmt<T> {
 
     @SafeVarargs
     public final <R> SelectStmt<T, R> selectDistinct(Class<R> clazz, Function<T, ?>... s) {
-        return new SelectStmt<T, R>(source, clazz, true, s);
+        return new SelectStmt<T, R>(previousResults, source, clazz, true, s);
     }
 
     /**
@@ -68,7 +68,7 @@ public class FromStmt<T> {
      * @return statement resulting in collection of R
      */
     public final <R> SelectStmt<T, R> selectDistinct(Function<T, R> s) {
-        return new SelectStmt<T, R>(source, true, s);
+        return new SelectStmt<T, R>(previousResults, source, true, s);
     }
 
     public <J> JoinClause<T, J> join(Iterable<J> iterable) {
@@ -81,6 +81,10 @@ public class FromStmt<T> {
 
     public <J> JoinClause<T, J> join(Query<J> stream) {
         throw new UnsupportedOperationException();
+    }
+
+    public <R> void setPreviousResults(List<R> previousResults) {
+        this.previousResults = previousResults;
     }
 
     public class JoinClause<T, J> {
@@ -96,11 +100,11 @@ public class FromStmt<T> {
         }
     }
 
-    private FromStmt(Iterable<T> iterable) {
+    public FromStmt(Iterable<T> iterable) {
         source = StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
     }
 
-    private FromStmt(Stream<T> stream) {
+    public FromStmt(Stream<T> stream) {
         source = stream.collect(Collectors.toList());
     }
 
