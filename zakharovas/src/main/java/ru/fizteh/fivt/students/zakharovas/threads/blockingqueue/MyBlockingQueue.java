@@ -129,7 +129,7 @@ public class MyBlockingQueue<T> {
                     currentTime = System.currentTimeMillis();
                     if (lockForOperation.tryLock(timeout, TimeUnit.MILLISECONDS)) {
                         try {
-                            while (realQueue.size() + list.size() >= maxSize) {
+                            while (realQueue.size() + list.size() > maxSize) {
                                 timeout -= System.currentTimeMillis() - currentTime;
                                 currentTime = System.currentTimeMillis();
                                 if (!notFullQueueCondition.await(timeout, TimeUnit.MILLISECONDS)) {
