@@ -3,17 +3,20 @@ package ru.fizteh.fivt.students.zakharovas.collectionquery.impl;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Created by kormushin on 06.10.15.
  */
 public class FromStmt<T> {
+    private Stream<T> source;
+
     public static <T> FromStmt<T> from(Iterable<T> iterable) {
-        throw new UnsupportedOperationException();
+        return new FromStmt<T>(iterable);
     }
 
     public static <T> FromStmt<T> from(Stream<T> stream) {
-        throw new UnsupportedOperationException();
+       return new FromStmt<T>(stream);
     }
 
     public static <T> FromStmt<T> from(Query query) {
@@ -22,7 +25,7 @@ public class FromStmt<T> {
 
     @SafeVarargs
     public final <R> SelectStmt<T, R> select(Class<R> clazz, Function<T, ?>... s) {
-        throw new UnsupportedOperationException();
+        return new SelectStmt<T, R>(source, clazz, false, s);
     }
 
     /**
@@ -33,7 +36,7 @@ public class FromStmt<T> {
      * @return statement resulting in collection of R
      */
     public final <R> SelectStmt<T, R> select(Function<T, R> s) {
-        throw new UnsupportedOperationException();
+        return new SelectStmt<T, R>(source, false, s);
     }
 
     /**
@@ -51,7 +54,7 @@ public class FromStmt<T> {
 
     @SafeVarargs
     public final <R> SelectStmt<T, R> selectDistinct(Class<R> clazz, Function<T, ?>... s) {
-        throw new UnsupportedOperationException();
+        return new SelectStmt<T, R>(source, clazz, true, s);
     }
 
     /**
@@ -62,7 +65,7 @@ public class FromStmt<T> {
      * @return statement resulting in collection of R
      */
     public final <R> SelectStmt<T, R> selectDistinct(Function<T, R> s) {
-        throw new UnsupportedOperationException();
+        return new SelectStmt<T, R>(source, true, s);
     }
 
     public <J> JoinClause<T, J> join(Iterable<J> iterable) {
@@ -89,4 +92,15 @@ public class FromStmt<T> {
             throw new UnsupportedOperationException();
         }
     }
+
+    private FromStmt(Iterable<T> iterable) {
+        source = StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    private FromStmt(Stream<T> stream) {
+        source = stream;
+    }
+
+
+
 }
