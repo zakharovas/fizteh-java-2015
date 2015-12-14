@@ -27,7 +27,7 @@ public class FromStmt<T> {
         return new FromStmt<T>(stream);
     }
 
-    public static <T> FromStmt<T> from(Query query) throws ReflectiveOperationException {
+    public static <T> FromStmt<T> from(Query<T> query) throws ReflectiveOperationException {
         return new FromStmt<T>(query.execute());
     }
 
