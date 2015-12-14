@@ -167,9 +167,9 @@ public class SelectStmt<T, R> implements Query<R> {
             }
             if (previousResults != null) {
                 if (previousResults.size() > 0) {
-                    if (rClass != null && previousResults.get(0).getClass() != rClass ||
-                            finalResult.size() > 0
-                                    && previousResults.get(0).getClass() != finalResult.get(0).getClass()) {
+                    if (rClass != null && previousResults.get(0).getClass() != rClass
+                            || finalResult.size() > 0
+                            && previousResults.get(0).getClass() != finalResult.get(0).getClass()) {
                         throw new IllegalArgumentException("Union has differentArguments");
                     } else {
                         List<R> mergedResults = (List<R>) previousResults;
