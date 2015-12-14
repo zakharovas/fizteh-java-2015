@@ -112,8 +112,9 @@ public class SelectStmt<T, R> implements Query<R> {
             return this;
         }
 
-        public UnionStmt union() throws ReflectiveOperationException {
-            return new UnionStmt(StreamSupport.stream(execute().spliterator(), false).collect(Collectors.toList()));
+        public UnionStmt<R> union() throws ReflectiveOperationException {
+            return new UnionStmt<R>(StreamSupport.stream(execute().spliterator(), false)
+                    .collect(Collectors.toList()));
         }
 
         @Override
@@ -166,7 +167,9 @@ public class SelectStmt<T, R> implements Query<R> {
             }
             if (previousResults != null) {
                 if (previousResults.size() > 0) {
-                    if (previousResults.get(0).getClass() != rClass) {
+                    if (rClass != null && previousResults.get(0).getClass() != rClass ||
+                            finalResult.size() > 0
+                                    && previousResults.get(0).getClass() != finalResult.get(0).getClass()) {
                         throw new IllegalArgumentException("Union has differentArguments");
                     } else {
                         List<R> mergedResults = (List<R>) previousResults;

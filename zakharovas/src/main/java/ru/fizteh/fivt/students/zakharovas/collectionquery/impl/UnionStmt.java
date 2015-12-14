@@ -9,10 +9,9 @@ public class UnionStmt<R> {
     private List<R> previousResults;
 
     public <T> FromStmt<T> from(Iterable<T> list) {
-        FromStmt<T> newFrom =  new FromStmt<T>(list);
+        FromStmt<T> newFrom =  new FromStmt<>(list);
         newFrom.setPreviousResults(previousResults);
         return newFrom;
-
     }
 
     public UnionStmt(List<R> previousResults) {
