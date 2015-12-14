@@ -15,24 +15,25 @@ public class AnnotatedField {
     private String columnName;
     private Field field;
 
-    private static final Map<Class, String> sqlType;
+    private static final Map<Class, String> SQL_TYPE;
+
     static {
-        sqlType = new HashMap<>();
-        sqlType.put(Integer.class, "INT");
-        sqlType.put(Long.class, "INT");
-        sqlType.put(Byte.class, "INT");
-        sqlType.put(Short.class, "INT");
-        sqlType.put(Double.class, "DOUBLE");
-        sqlType.put(Float.class, "DOUBLE");
-        sqlType.put(String.class, "VARCHAR(10)");
-        sqlType.put(Character.class, "VARCHAR(10)");
-        sqlType.put(Integer.TYPE, "INT");
-        sqlType.put(Long.TYPE, "INT");
-        sqlType.put(Byte.TYPE, "INT");
-        sqlType.put(Short.TYPE, "INT");
-        sqlType.put(Double.TYPE, "DOUBLE");
-        sqlType.put(Float.TYPE, "DOUBLE");
-        sqlType.put(Character.TYPE, "VARCHAR(10)");
+        SQL_TYPE = new HashMap<>();
+        SQL_TYPE.put(Integer.class, "INT");
+        SQL_TYPE.put(Long.class, "INT");
+        SQL_TYPE.put(Byte.class, "INT");
+        SQL_TYPE.put(Short.class, "INT");
+        SQL_TYPE.put(Double.class, "DOUBLE");
+        SQL_TYPE.put(Float.class, "DOUBLE");
+        SQL_TYPE.put(String.class, "VARCHAR(10)");
+        SQL_TYPE.put(Character.class, "VARCHAR(10)");
+        SQL_TYPE.put(Integer.TYPE, "INT");
+        SQL_TYPE.put(Long.TYPE, "INT");
+        SQL_TYPE.put(Byte.TYPE, "INT");
+        SQL_TYPE.put(Short.TYPE, "INT");
+        SQL_TYPE.put(Double.TYPE, "DOUBLE");
+        SQL_TYPE.put(Float.TYPE, "DOUBLE");
+        SQL_TYPE.put(Character.TYPE, "VARCHAR(10)");
     }
 
     public String getColumnName() {
@@ -44,17 +45,17 @@ public class AnnotatedField {
     }
 
     public String getSqlType() throws DatabaseException {
-        if (sqlType.get(field.getType()) == null) {
+        if (SQL_TYPE.get(field.getType()) == null) {
             throw new DatabaseException(columnName + " has bad type for sql");
         }
-        return sqlType.get(field.getType());
+        return SQL_TYPE.get(field.getType());
 
     }
 
     public AnnotatedField(Field field) {
         this.field = field;
         Column column = field.getAnnotation(Column.class);
-        columnName =column.name();
+        columnName = column.name();
         if (columnName.equals("")) {
             columnName = field.getName();
             columnName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, columnName);

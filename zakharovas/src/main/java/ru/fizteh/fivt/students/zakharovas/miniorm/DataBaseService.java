@@ -20,7 +20,7 @@ public class DataBaseService<T> {
     private Field primaryKey;
     private boolean hasTable = false;
     private String tableName;
-    private final static String DATABASE_NAME = "jdbc:h2:~/database";
+    private static final String DATABASE_NAME = "jdbc:h2:~/database";
 
 
     public DataBaseService(Class<T> typeClass) throws DatabaseException, ClassNotFoundException, SQLException {
@@ -50,10 +50,10 @@ public class DataBaseService<T> {
                 primaryKey = field;
             }
         }
-        try(Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
             try (ResultSet resultSet = connection.getMetaData()
                     .getTables(null, null,
-                            CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_UNDERSCORE, tableName), null)){
+                            CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_UNDERSCORE, tableName), null)) {
                 if (resultSet.next()) {
                     hasTable = true;
                 }
@@ -68,7 +68,7 @@ public class DataBaseService<T> {
         }
         StringBuilder createRequest = new StringBuilder();
         createRequest.append("CREATE TABLE ").append(tableName).append(" (");
-        for (AnnotatedField field: columns) {
+        for (AnnotatedField field : columns) {
             createRequest.append(field.getColumnName()).append(" ");
             createRequest.append(field.getSqlType()).append(" ");
             if (field.getField().isAnnotationPresent(PrimaryKey.class)) {
@@ -78,14 +78,12 @@ public class DataBaseService<T> {
         }
         createRequest.deleteCharAt(createRequest.lastIndexOf(","));
         createRequest.append(")");
-        try(Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
-            try(Statement statement = connection.createStatement()) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (Statement statement = connection.createStatement()) {
                 statement.execute(createRequest.toString());
-                hasTable =true;
+                hasTable = true;
             }
         }
-
-
 
 
     }
@@ -94,8 +92,8 @@ public class DataBaseService<T> {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        try(Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
-            try (Statement statement = connection.createStatement()){
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (Statement statement = connection.createStatement()) {
                 statement.execute("DROP TABLE " + tableName);
                 hasTable = false;
             }
