@@ -31,10 +31,7 @@ public class Conditions<T> {
      * @return
      */
     public static <T> Predicate<T> like(Function<T, String> expression, String pattern) {
-        if (pattern == null) {
-            return (object) -> false;
-        }
-        return (object) -> (pattern.equals(expression.apply(object)));
+        throw new UnsupportedOperationException();
     }
 
 }
