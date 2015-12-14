@@ -195,11 +195,6 @@ public class SelectStmt<T, R> implements Query<R> {
             return StreamSupport.stream(execute().spliterator(), false);
         }
 
-        private WhereStmt(List<T> source, Predicate<T> predicate) {
-            this.source = source;
-            wherePredicate = predicate;
-        }
-
         private List<R> executeOnList(List<T> currentSource) throws ReflectiveOperationException {
             List<R> result = new ArrayList<>();
             if (hasConvertingFunction) {

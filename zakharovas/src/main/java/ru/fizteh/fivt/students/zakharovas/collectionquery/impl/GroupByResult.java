@@ -35,7 +35,6 @@ public class GroupByResult<T> {
     @Override
     public int hashCode() {
         int result = 0;
-        System.out.println(results.length);
         for (Object element : results) {
             result += element.hashCode();
         }
