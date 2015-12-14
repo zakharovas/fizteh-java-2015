@@ -113,7 +113,7 @@ public class DataBaseService<T> {
         if (primaryKey == null) {
             throw new DatabaseException("primary key should exist for delete");
         }
-        if (!key.getClass().isInstance(primaryKey.getType())) {
+        if (!primaryKey.getType().isInstance(key)) {
             throw new IllegalArgumentException("key should have same type as primary key");
         }
 
