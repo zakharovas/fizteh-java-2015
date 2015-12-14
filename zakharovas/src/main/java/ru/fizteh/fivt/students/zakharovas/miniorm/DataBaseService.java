@@ -14,11 +14,13 @@ import java.util.List;
  * Created by alexander on 14.12.15.
  */
 public class DataBaseService<T> {
-    Class<T> typeClass;
-    List<AnnotatedField> columns;
-    Field primaryKey;
-    boolean hasTable = false;
-    String tableName;
+    private Class<T> typeClass;
+    private List<AnnotatedField> columns;
+    private Field primaryKey;
+    private boolean hasTable = false;
+    private String tableName;
+    private final static String DATABASE_NAME = "jdbc:h2:~/database";
+
 
     public DataBaseService(Class<T> typeClass) throws DatabaseException, ClassNotFoundException {
         Class.forName("org.h2.Driver");
@@ -54,8 +56,8 @@ public class DataBaseService<T> {
         if (hasTable) {
             throw new DatabaseException("table can be created only once for each service");
         }
-
         hasTable =true;
+        
 
     }
 
