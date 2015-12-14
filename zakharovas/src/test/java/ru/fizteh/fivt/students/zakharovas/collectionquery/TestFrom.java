@@ -81,37 +81,6 @@ public class TestFrom {
         assertThat(result.collect(Collectors.toList()), contains(2, 4, 6, 8, 10));
     }
 
-    @Test
-    public void testWhere() throws ReflectiveOperationException {
-        List<Integer> result = from(Arrays.asList(1, 2, 3, 4, 5)).select(integer -> 2 * integer).
-                where(i -> i > 3).stream().collect(Collectors.toList());
-        assertThat(result.size(), is(2));
-        assertThat(result, contains(8, 10));
-
-    }
-
-
-
-    @Test
-    public void testGroupBy() {
-
-    }
-
-    @Test
-    public void testOrderBy() {
-
-    }
-
-    @Test
-    public void testLimit() {
-
-    }
-
-    @Test
-    public void testUnion() {
-
-    }
-
     public static class MyInteger {
         private Integer number;
 
