@@ -17,7 +17,7 @@ import java.util.List;
 public class DataBaseService<T> {
     private Class<T> typeClass;
     private List<AnnotatedField> columns;
-    private Field primaryKey;
+    private int primaryKey = -1;
     private boolean hasTable = false;
     private String tableName;
     private static final String DATABASE_NAME = "jdbc:h2:~/database";
@@ -44,10 +44,10 @@ public class DataBaseService<T> {
                 if (field.getAnnotation(Column.class) == null) {
                     throw new DatabaseException("Primary key should be column");
                 }
-                if (primaryKey != null) {
+                if (primaryKey != -1) {
                     throw new DatabaseException("Primary key should be one");
                 }
-                primaryKey = field;
+                primaryKey = columns.size() - 1;
             }
         }
         try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
@@ -101,32 +101,40 @@ public class DataBaseService<T> {
 
     }
 
-    public <K> T queryById(K key) throws DatabaseException {
+    public <K> T queryById(K key) throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        if (primaryKey == null) {
+        if (primaryKey == -1) {
             throw new DatabaseException("primary key should exist for delete");
         }
-        if (!key.getClass().isInstance(primaryKey.getType())) {
+        if (!columns.get(primaryKey).getField().getType().isInstance(key)) {
             throw new IllegalArgumentException("key should have same type as primary key");
         }
-        return null;
+        StringBuilder query = new StringBuilder();
+        List<T> result = queryWithRequest(query.toString());
+        if (result.size() == 0) {
+            return null;
+        } else {
+            return result.get(0);
+        }
 
     }
 
-    public List<T> queryForAll() throws DatabaseException {
+
+    public List<T> queryForAll() throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        return null;
+        return queryWithRequest("SELECT * FROM " + tableName);
+
     }
 
     public void insert(T element) throws DatabaseException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        if (primaryKey == null) {
+        if (primaryKey == -1) {
             throw new DatabaseException("primary key should exist for delete");
         }
 
@@ -136,7 +144,7 @@ public class DataBaseService<T> {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        if (primaryKey == null) {
+        if (primaryKey == -1) {
             throw new DatabaseException("primary key should exist for delete");
         }
 
@@ -146,10 +154,10 @@ public class DataBaseService<T> {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        if (primaryKey == null) {
+        if (primaryKey == -1) {
             throw new DatabaseException("primary key should exist for delete");
         }
-        if (!primaryKey.getType().isInstance(key)) {
+        if (!columns.get(primaryKey).getField().getType().isInstance(key)) {
             throw new IllegalArgumentException("key should have same type as primary key");
         }
 
@@ -159,8 +167,27 @@ public class DataBaseService<T> {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        Object key = primaryKey.get(line);
+        Object key = columns.get(primaryKey).getField().get(line);
         deleteByKey(key);
+    }
+
+    private List<T> queryWithRequest(String query) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (Statement statement = connection.createStatement()) {
+                try (ResultSet resultSet = statement.executeQuery(query)) {
+                    return convertResult(resultSet);
+                }
+            }
+        }
+    }
+
+    private List<T> convertResult(ResultSet resultSet) throws SQLException {
+        List<T> result = new ArrayList<>();
+        while (resultSet.next()) {
+
+
+        }
+        return result;
     }
 
 
