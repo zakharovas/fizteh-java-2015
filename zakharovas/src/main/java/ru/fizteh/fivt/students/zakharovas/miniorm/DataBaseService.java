@@ -36,7 +36,7 @@ public class DataBaseService<T> {
             tableName = typeClass.getSimpleName();
             tableName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, tableName);
         }
-        for (Field field : typeClass.getDeclaredFields()) {
+        for (Field field : typeClass.getFields()) {
             if (field.getAnnotation(Column.class) != null) {
                 columns.add(new AnnotatedField(field));
             }
