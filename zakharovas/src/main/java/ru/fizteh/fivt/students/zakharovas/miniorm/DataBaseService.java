@@ -130,13 +130,33 @@ public class DataBaseService<T> {
 
     }
 
-    public void insert(T element) throws DatabaseException {
+    public void insert(T element) throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        if (primaryKey == -1) {
-            throw new DatabaseException("primary key should exist for delete");
+        StringBuilder insertRequest = new StringBuilder();
+        insertRequest.append("INSERT INTO ").append(tableName).append(" ( ");
+        for (AnnotatedField field: columns) {
+            insertRequest.append(field.getColumnName()).append(", ");
+        };
+        insertRequest.deleteCharAt(insertRequest.lastIndexOf(","));
+        insertRequest.append(") VALUES (");
+        for (AnnotatedField field: columns) {
+            try {
+                insertRequest.append(field.getField().get(element)).append(", ");
+            } catch (IllegalAccessException e) {
+                throw new DatabaseException("bad element for insert");
+            }
+        };
+        insertRequest.deleteCharAt(insertRequest.lastIndexOf(","));
+        insertRequest.append(")");
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)){
+            try (Statement statement = connection.createStatement()){
+                statement.execute(insertRequest.toString());
+            }
         }
+
+
 
     }
 
@@ -145,7 +165,7 @@ public class DataBaseService<T> {
             throw new DatabaseException("table should be created before");
         }
         if (primaryKey == -1) {
-            throw new DatabaseException("primary key should exist for delete");
+            throw new DatabaseException("primary key should exist for update");
         }
 
     }
@@ -171,7 +191,7 @@ public class DataBaseService<T> {
         deleteByKey(key);
     }
 
-    private List<T> queryWithRequest(String query) throws SQLException {
+    private List<T> queryWithRequest(String query) throws SQLException, DatabaseException {
         try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
             try (Statement statement = connection.createStatement()) {
                 try (ResultSet resultSet = statement.executeQuery(query)) {
@@ -181,11 +201,43 @@ public class DataBaseService<T> {
         }
     }
 
-    private List<T> convertResult(ResultSet resultSet) throws SQLException {
+    private List<T> convertResult(ResultSet resultSet) throws SQLException, DatabaseException {
         List<T> result = new ArrayList<>();
         while (resultSet.next()) {
-
-
+            T newElement;
+            try {
+                newElement = typeClass.newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new DatabaseException("Can not create new element");
+            }
+            for (int i = 0; i < columns.size(); ++i) {
+                try {
+                    switch (columns.get(i).getSqlType()) {
+                        case "INT":
+                            long number = resultSet.getLong(i + 1);
+                            columns.get(i).getField().set(newElement, number);
+                            break;
+                        case "DOUBLE":
+                            double doubleNumber = resultSet.getDouble(i + 1);
+                            columns.get(i).getField().set(newElement, doubleNumber);
+                            break;
+                        case "VARCHAR(10)":
+                            if (columns.get(i).getField().getType().equals(String.class)) {
+                                String string = resultSet.getString(i + 1);
+                                columns.get(i).getField().set(newElement, string);
+                            } else {
+                                char c = resultSet.getString(i + 1).charAt(0);
+                                columns.get(i).getField().set(newElement, c);
+                            }
+                            break;
+                        default:
+                            throw new DatabaseException("Type of field in class is bad.");
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new DatabaseException("Can not initialize new element");
+                }
+            }
+            result.add(newElement);
         }
         return result;
     }
