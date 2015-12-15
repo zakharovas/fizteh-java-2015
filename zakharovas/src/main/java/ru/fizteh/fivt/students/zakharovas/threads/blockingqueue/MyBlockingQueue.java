@@ -15,11 +15,6 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class MyBlockingQueue<T> {
     private Queue<T> realQueue = new LinkedList<>();
-    //writingLock и readingLock делают так, чтобы запросы на добавление(считывание) из очереди происходили в
-    //правильном порядке.
-    //LockForOperation делает так что одновременно к массиву очереди имел доступ только один поток
-    private Lock writingLock = new ReentrantLock(true);
-    private Lock readingLock = new ReentrantLock(true);
     private Lock lockForOperation = new ReentrantLock(true);
     private Condition notFullQueueCondition = lockForOperation.newCondition();
     private Condition notEmptyQueueCondition = lockForOperation.newCondition();
@@ -32,42 +27,33 @@ public class MyBlockingQueue<T> {
         if (n == 0) {
             return new ArrayList<T>();
         }
-        readingLock.lockInterruptibly();
+        lockForOperation.lockInterruptibly();
         try {
-            lockForOperation.lockInterruptibly();
-            try {
-                List<T> answer = new ArrayList<>();
-                while (realQueue.size() < n) {
-                    notEmptyQueueCondition.await();
-                }
-                for (int i = 0; i < n; ++i) {
-                    answer.add(realQueue.poll());
-                }
-                notFullQueueCondition.signalAll();
-                return answer;
-            } finally {
-                lockForOperation.unlock();
+            List<T> answer = new ArrayList<>();
+            while (realQueue.size() < n) {
+                notEmptyQueueCondition.await();
             }
+            for (int i = 0; i < n; ++i) {
+                answer.add(realQueue.poll());
+            }
+            notFullQueueCondition.signalAll();
+            return answer;
         } finally {
-            readingLock.unlock();
+            lockForOperation.unlock();
         }
+
     }
 
     public <E extends T> boolean offer(List<E> list) throws InterruptedException {
-        writingLock.lockInterruptibly();
+        lockForOperation.lockInterruptibly();
         try {
-            lockForOperation.lockInterruptibly();
-            try {
-                while (realQueue.size() + list.size() > maxSize) {
-                    notFullQueueCondition.await();
-                }
-                realQueue.addAll(list);
-                notEmptyQueueCondition.signal();
-            } finally {
-                lockForOperation.unlock();
+            while (realQueue.size() + list.size() > maxSize) {
+                notFullQueueCondition.await();
             }
+            realQueue.addAll(list);
+            notEmptyQueueCondition.signal();
         } finally {
-            writingLock.unlock();
+            lockForOperation.unlock();
         }
         return true;
     }
@@ -81,40 +67,33 @@ public class MyBlockingQueue<T> {
         }
         try {
             long currentTime = System.currentTimeMillis();
-            if (readingLock.tryLock(timeout, TimeUnit.MILLISECONDS)) {
+            if (lockForOperation.tryLock(timeout, TimeUnit.MILLISECONDS)) {
                 try {
-                    timeout -= (System.currentTimeMillis() - currentTime);
-                    currentTime = System.currentTimeMillis();
-                    if (lockForOperation.tryLock(timeout, TimeUnit.MILLISECONDS)) {
-                        try {
-                            List<T> answer = new ArrayList<>();
-                            while (realQueue.size() < n) {
-                                timeout -= (System.currentTimeMillis() - currentTime);
-                                currentTime = System.currentTimeMillis();
-                                if (!notEmptyQueueCondition.await(timeout, TimeUnit.MILLISECONDS)) {
-                                    throw new TimeoutException();
-                                }
-                            }
-                            for (int i = 0; i < n; ++i) {
-                                answer.add(realQueue.poll());
-                            }
-                            notFullQueueCondition.signalAll();
-                            return answer;
-                        } finally {
-                            lockForOperation.unlock();
+                    List<T> answer = new ArrayList<>();
+                    while (realQueue.size() < n) {
+                        timeout -= (System.currentTimeMillis() - currentTime);
+                        currentTime = System.currentTimeMillis();
+                        if (!notEmptyQueueCondition.await(timeout, TimeUnit.MILLISECONDS)) {
+                            throw new TimeoutException();
                         }
-                    } else {
-                        throw new TimeoutException();
                     }
+                    for (int i = 0; i < n; ++i) {
+                        answer.add(realQueue.poll());
+                    }
+                    notFullQueueCondition.signalAll();
+                    return answer;
                 } finally {
-                    readingLock.unlock();
+                    lockForOperation.unlock();
                 }
             } else {
                 throw new TimeoutException();
             }
+
         } catch (TimeoutException e) {
             return null;
         }
+
+
     }
 
     public <E extends T> boolean offer(List<E> list, long timeout) throws InterruptedException {
@@ -123,29 +102,19 @@ public class MyBlockingQueue<T> {
         }
         try {
             long currentTime = System.currentTimeMillis();
-            if (writingLock.tryLock(currentTime, TimeUnit.MILLISECONDS)) {
+            if (lockForOperation.tryLock(timeout, TimeUnit.MILLISECONDS)) {
                 try {
-                    timeout -= System.currentTimeMillis() - currentTime;
-                    currentTime = System.currentTimeMillis();
-                    if (lockForOperation.tryLock(timeout, TimeUnit.MILLISECONDS)) {
-                        try {
-                            while (realQueue.size() + list.size() > maxSize) {
-                                timeout -= System.currentTimeMillis() - currentTime;
-                                currentTime = System.currentTimeMillis();
-                                if (!notFullQueueCondition.await(timeout, TimeUnit.MILLISECONDS)) {
-                                    throw new TimeoutException();
-                                }
-                            }
-                            realQueue.addAll(list);
-                            notEmptyQueueCondition.signal();
-                        } finally {
-                            lockForOperation.unlock();
+                    while (realQueue.size() + list.size() > maxSize) {
+                        timeout -= System.currentTimeMillis() - currentTime;
+                        currentTime = System.currentTimeMillis();
+                        if (!notFullQueueCondition.await(timeout, TimeUnit.MILLISECONDS)) {
+                            throw new TimeoutException();
                         }
-                    } else {
-                        throw new TimeoutException();
                     }
+                    realQueue.addAll(list);
+                    notEmptyQueueCondition.signal();
                 } finally {
-                    writingLock.unlock();
+                    lockForOperation.unlock();
                 }
             } else {
                 throw new TimeoutException();
