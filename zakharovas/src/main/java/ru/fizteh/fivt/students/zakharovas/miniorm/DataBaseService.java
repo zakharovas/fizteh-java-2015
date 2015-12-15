@@ -112,7 +112,17 @@ public class DataBaseService<T> {
             throw new IllegalArgumentException("key should have same type as primary key");
         }
         StringBuilder query = new StringBuilder();
-        List<T> result = queryWithRequest(query.toString());
+        query.append("SELECT * FROM ").append(tableName).append(" WHERE ")
+                .append(columns.get(primaryKey).getColumnName()).append(" = ?");
+        List<T> result;
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (PreparedStatement statement = connection.prepareStatement(query.toString())) {
+                statement.setObject(1, key);
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    result = convertResult(resultSet);
+                }
+            }
+        }
         if (result.size() == 0) {
             return null;
         } else {
@@ -136,26 +146,28 @@ public class DataBaseService<T> {
         }
         StringBuilder insertRequest = new StringBuilder();
         insertRequest.append("INSERT INTO ").append(tableName).append(" ( ");
-        for (AnnotatedField field: columns) {
+        for (AnnotatedField field : columns) {
             insertRequest.append(field.getColumnName()).append(", ");
-        };
+        }
         insertRequest.deleteCharAt(insertRequest.lastIndexOf(","));
         insertRequest.append(") VALUES (");
-        for (AnnotatedField field: columns) {
-            try {
-                insertRequest.append(field.getField().get(element)).append(", ");
-            } catch (IllegalAccessException e) {
-                throw new DatabaseException("bad element for insert");
-            }
-        };
+        for (AnnotatedField field : columns) {
+            insertRequest.append("?").append(", ");
+        }
         insertRequest.deleteCharAt(insertRequest.lastIndexOf(","));
         insertRequest.append(")");
-        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)){
-            try (Statement statement = connection.createStatement()){
-                statement.execute(insertRequest.toString());
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (PreparedStatement statement = connection.prepareStatement(insertRequest.toString())) {
+                for (int i = 0; i < columns.size(); ++i) {
+                    try {
+                        statement.setObject(i + 1, columns.get(i).getField().get(element));
+                    } catch (IllegalAccessException e) {
+                        throw new IllegalArgumentException("bad argument for insert");
+                    }
+                }
+                statement.execute();
             }
         }
-
 
 
     }
@@ -212,14 +224,31 @@ public class DataBaseService<T> {
             }
             for (int i = 0; i < columns.size(); ++i) {
                 try {
-                    switch (columns.get(i).getSqlType()) {
+                    AnnotatedField currentField = columns.get(i);
+                    switch (currentField.getSqlType()) {
                         case "INT":
-                            long number = resultSet.getLong(i + 1);
-                            columns.get(i).getField().set(newElement, number);
+                            Long number = resultSet.getLong(i + 1);
+                            if (currentField.getField().getType().equals(Byte.class)
+                                    || currentField.getField().getType().equals(Byte.TYPE)) {
+                                currentField.getField().set(newElement, number.byteValue());
+                            } else if (currentField.getField().getType().equals(Short.class)
+                                    || currentField.getField().getType().equals(Short.TYPE)) {
+                                currentField.getField().set(newElement, number.shortValue());
+                            } else if (currentField.getField().getType().equals(Integer.class)
+                                    || currentField.getField().getType().equals(Integer.TYPE)) {
+                                currentField.getField().set(newElement, number.intValue());
+                            } else {
+                                currentField.getField().set(newElement, number);
+                            }
                             break;
                         case "DOUBLE":
-                            double doubleNumber = resultSet.getDouble(i + 1);
-                            columns.get(i).getField().set(newElement, doubleNumber);
+                            Double doubleNumber = resultSet.getDouble(i + 1);
+                            if (currentField.getField().getType().equals(Float.class)
+                                    || currentField.getField().getType().equals(Float.TYPE)) {
+                                currentField.getField().set(newElement, doubleNumber.floatValue());
+                            } else {
+                                currentField.getField().set(newElement, doubleNumber);
+                            }
                             break;
                         case "VARCHAR(10)":
                             if (columns.get(i).getField().getType().equals(String.class)) {
