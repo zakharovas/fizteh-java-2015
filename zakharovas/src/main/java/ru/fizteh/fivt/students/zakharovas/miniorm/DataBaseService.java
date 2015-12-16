@@ -84,8 +84,6 @@ public class DataBaseService<T> {
                 hasTable = true;
             }
         }
-
-
     }
 
     public void dropTable() throws DatabaseException, SQLException {
@@ -98,7 +96,6 @@ public class DataBaseService<T> {
                 hasTable = false;
             }
         }
-
     }
 
     public <K> T queryById(K key) throws DatabaseException, SQLException {
@@ -128,16 +125,17 @@ public class DataBaseService<T> {
         } else {
             return result.get(0);
         }
-
     }
-
 
     public List<T> queryForAll() throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
         return queryWithRequest("SELECT * FROM " + tableName);
+    }
 
+    public boolean isTableCreated() {
+        return hasTable;
     }
 
     public void insert(T element) throws DatabaseException, SQLException {
@@ -168,21 +166,39 @@ public class DataBaseService<T> {
                 statement.execute();
             }
         }
-
-
     }
 
-    public void update(T element) throws DatabaseException {
+    public void update(T element) throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
         if (primaryKey == -1) {
             throw new DatabaseException("primary key should exist for update");
         }
-
+        StringBuilder updateRequest = new StringBuilder();
+        updateRequest.append("UPDATE ").append(tableName).append(" SET ");
+        for (AnnotatedField field : columns) {
+            updateRequest.append(field.getColumnName()).append(" = ?, ");
+        }
+        updateRequest.deleteCharAt(updateRequest.lastIndexOf(","));
+        updateRequest.append(" WHERE ")
+                .append(columns.get(primaryKey).getColumnName()).append(" = ?");
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (PreparedStatement statement = connection.prepareStatement(updateRequest.toString())) {
+                try {
+                    for (int i = 0; i < columns.size(); ++i) {
+                        statement.setObject(i + 1, columns.get(i).getField().get(element));
+                    }
+                    statement.setObject(columns.size() + 1, columns.get(primaryKey).getField().get(element));
+                } catch (IllegalAccessException e) {
+                    throw new DatabaseException("bad element for update");
+                }
+                statement.execute();
+            }
+        }
     }
 
-    public <K> void deleteByKey(K key) throws DatabaseException {
+    public <K> void deleteByKey(K key) throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
@@ -192,14 +208,27 @@ public class DataBaseService<T> {
         if (!columns.get(primaryKey).getField().getType().isInstance(key)) {
             throw new IllegalArgumentException("key should have same type as primary key");
         }
-
+        StringBuilder deleteRequest = new StringBuilder();
+        deleteRequest.append("DELETE FROM ").append(tableName).append(" WHERE ")
+                .append(columns.get(primaryKey).getColumnName()).append(" = ?");
+        try (Connection connection = DriverManager.getConnection(DATABASE_NAME)) {
+            try (PreparedStatement statement = connection.prepareStatement(deleteRequest.toString())) {
+                statement.setObject(1, key);
+                statement.execute();
+            }
+        }
     }
 
-    public void delete(T line) throws IllegalAccessException, DatabaseException {
+    public void delete(T line) throws DatabaseException, SQLException {
         if (!hasTable) {
             throw new DatabaseException("table should be created before");
         }
-        Object key = columns.get(primaryKey).getField().get(line);
+        Object key = null;
+        try {
+            key = columns.get(primaryKey).getField().get(line);
+        } catch (IllegalAccessException e) {
+            throw new DatabaseException("bad element for delete");
+        }
         deleteByKey(key);
     }
 
@@ -270,6 +299,4 @@ public class DataBaseService<T> {
         }
         return result;
     }
-
-
 }
