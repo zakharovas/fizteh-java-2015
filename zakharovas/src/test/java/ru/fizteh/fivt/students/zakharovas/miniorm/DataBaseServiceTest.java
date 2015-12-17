@@ -127,7 +127,8 @@ public class DataBaseServiceTest {
         @Column
         public Double doubleNumber;
 
-        @Column Float floatNumber;
+        @Column
+        public Float floatNumber;
 
         @Column
         public Character c;
