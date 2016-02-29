@@ -61,7 +61,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ru.fizteh.fivt.students.zakharovas.twitterstream.TwitterStreamMain</mainClass>
+                            <mainClass>ru.fizteh.fivt.students.zakharovas.threads.counter.Counter</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
